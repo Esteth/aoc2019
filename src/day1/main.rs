@@ -24,3 +24,30 @@ fn main() -> Result<(), Box<dyn Error>>{
     println!("Total Fuel Requirement: {}", total_fuel);
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fuel_required_zero() {
+        assert_eq!(fuel_required(0), 0);
+    }
+
+    #[test]
+    fn fuel_required_small() {
+        assert_eq!(fuel_required(1), 0);
+        assert_eq!(fuel_required(8), 0);
+    }
+
+    #[test]
+    fn fuel_required_smallest_significant() {
+        assert_eq!(fuel_required(9), 1);
+    }
+
+    #[test]
+    fn fuel_required_large() {
+        assert_eq!(fuel_required(1969), 966);
+        assert_eq!(fuel_required(100756), 50346);
+    }
+}
