@@ -1,0 +1,9 @@
+[package]
+name = "soc2019"
+version = "0.1.0"
+authors = ["Adam Copp <adam.copp@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "day1"
+path = "src/day1/main.rs"
