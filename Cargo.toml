@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Adam Copp <adam.copp@gmail.com>"]
 edition = "2018"
 
+[lib]
+name = "computer"
+path = "src/computer.rs"
+
 [[bin]]
 name = "day1"
 path = "src/day1/main.rs"
