@@ -23,12 +23,18 @@ fn is_in_range(i: i64, lower: i64, upper: i64) -> bool {
 }
 
 fn contains_pair(s: &str) -> bool {
-    s.chars()
-        .collect::<Vec<_>>()
-        .windows(2)
+    let chars = s.chars().collect::<Vec<_>>();
+    if chars[0] == chars[1] && chars[1] != chars[2] {
+        return true;
+    }
+    if chars[chars.len() - 2] == chars[chars.len() - 1] && chars[chars.len() - 3] != chars[chars.len() - 2] {
+        return true;
+    }
+    chars
+        .windows(4)
         .any(|arr| {
             match arr {
-                [x, y] => x == y,
+                [a, x, y, z] => x == y && a != x && y != z,
                 _ => false
             }
         })
