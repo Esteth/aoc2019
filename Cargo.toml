@@ -5,8 +5,8 @@ authors = ["Adam Copp <adam.copp@gmail.com>"]
 edition = "2018"
 
 [lib]
-name = "computer"
-path = "src/computer.rs"
+name = "aoc"
+path = "src/lib.rs"
 
 [[bin]]
 name = "day1"

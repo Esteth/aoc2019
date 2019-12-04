@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut memory = memory.clone();
             memory[1] = noun;
             memory[2] = verb;
-            let mut computer = computer::Computer::new(memory);
+            let mut computer = aoc::computer::Computer::new(memory);
             let result = computer.run_to_completion()?;
             if result == 19690720 {
                 println!("noun={}, verb={}", noun, verb);

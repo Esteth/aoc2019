@@ -64,20 +64,16 @@ impl FromStr for Instruction {
     }
 }
 
-fn manhattan_distance_from_origin(point: (i32, i32)) -> i32 {
-    point.0.abs() + point.1.abs()
-}
-
 fn read_wire<R: BufRead>(r: &mut R) -> Vec<Instruction> {
     let mut wire = String::new();
-    r.read_line(&mut wire);
+    r.read_line(&mut wire).unwrap();
     wire.split(',')
         .map(|i| i.trim().parse().unwrap())
         .collect()
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut stdin = std::io::stdin();
+    let stdin = std::io::stdin();
     let mut stdin_lock = stdin.lock();
     let wire1 = read_wire(&mut stdin_lock);
 
@@ -85,7 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut dist_1: HashMap<(i32, i32), i32> = HashMap::new();
     let mut pos = (0, 0);
     let mut total_traveled = 0;
-    for (i, instruction) in wire1.iter().enumerate() {
+    for instruction in wire1 {
         let x_mod: i32 = instruction.direction.x_mod();
         let y_mod: i32 = instruction.direction.y_mod();
 
@@ -102,7 +98,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut dist_2: HashMap<(i32, i32), i32> = HashMap::new();
     let mut pos = (0, 0);
     let mut total_traveled = 0;
-    for (i, instruction) in wire2.iter().enumerate() {
+    for instruction in wire2 {
         let x_mod: i32 = instruction.direction.x_mod();
         let y_mod: i32 = instruction.direction.y_mod();
 
