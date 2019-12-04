@@ -20,5 +20,9 @@ path = "src/day2/main.rs"
 name = "day3"
 path = "src/day3/main.rs"
 
+[[bin]]
+name = "day4"
+path = "src/day4/main.rs"
+
 [dependencies]
 simple-error = "0.2.1"
