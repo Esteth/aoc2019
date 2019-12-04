@@ -19,3 +19,6 @@ path = "src/day2/main.rs"
 [[bin]]
 name = "day3"
 path = "src/day3/main.rs"
+
+[dependencies]
+simple-error = "0.2.1"
