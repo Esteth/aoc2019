@@ -34,7 +34,13 @@ enum Parameter {
 impl Parameter {
     fn new(value: i32, mode_bit: i32) -> Result<Parameter, SimpleError> {
         match mode_bit {
-            0 => Ok(Parameter::Position(value as usize)),
+            0 => {
+                if value < 0 {
+                    Err(SimpleError::new(format!("Negative index: {}", value)))
+                } else {
+                    Ok(Parameter::Position(value as usize))
+                }
+            },
             1 => Ok(Parameter::Immediate(value)),
             _ => Err(SimpleError::new("Invalid mode bit")),
         }
@@ -78,7 +84,7 @@ impl Computer<'_> {
 
     fn step(&mut self) -> Result<bool, Box<dyn Error>> {
         let opcode = self.memory[self.ip as usize] % 100;
-        let mut m = opcode / 100;
+        let mut m = self.memory[self.ip as usize] / 100;
         let mut modes = Vec::new();
         for _ in 0..3 {
             modes.push(m % 10);
@@ -116,6 +122,8 @@ impl Computer<'_> {
                 self.ip += 4;
             }
             Instruction::Input(Parameter::Position(dest)) => {
+                write!(self.output, "Please provide input: ");
+                self.output.flush();
                 let mut input = String::new();
                 self.input.read_line(&mut input).unwrap();
                 let val: i32 = input.trim().parse().unwrap();
