@@ -10,6 +10,18 @@ fn distance_from_root(parents: &HashMap<String, String>, node: &String) -> i32 {
     }
 }
 
+fn path_to_root(parents: &HashMap<String, String>, node: &String) -> HashMap<String, i32> {
+    let mut path = HashMap::new();
+    let mut i = 0;
+    let mut node = node;
+    while *node != "COM".to_string() {
+        path.insert(node.to_string(), i);
+        i += 1;
+        node = parents.get(node).unwrap();
+    }
+    path
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let mut parents: HashMap<String, String> = HashMap::new();
 
@@ -24,8 +36,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         parents.insert(orbiter.to_string(), orbitee.to_string());
     }
 
-    let total: i32 = parents.keys().map(|node| distance_from_root(&parents, node)).sum();
+    let path_you = path_to_root(&parents, &"YOU".to_string());
+    let mut node = &"SAN".to_string();
+    let mut i = 0;
+    loop {
+        if path_you.contains_key(node) {
+            println!("{}", path_you.get(node).unwrap() + i - 2);
+            break;
+        }
+        i += 1;
+        node = parents.get(node).unwrap();
+    }
 
-    println!("{:?}", total);
     Ok(())
 }
