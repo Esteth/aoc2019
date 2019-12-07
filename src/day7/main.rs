@@ -15,20 +15,20 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Why is there no permutations() function in the standard library?
     // Do the dumb thing for now.
     let mut max_score = 0;
-    for i1 in 0..5 {
-        for i2 in 0..5 {
+    for i1 in 5..10 {
+        for i2 in 5..10 {
             if i2 == i1 {
                 continue;
             }
-            for i3 in 0..5 {
+            for i3 in 5..10 {
                 if i3 == i2 || i3 == i1 {
                     continue;
                 }
-                for i4 in 0..5 {
+                for i4 in 5..10 {
                     if i4 == i3 || i4 == i2 || i4 == i1 {
                         continue;
                     }
-                    for i5 in 0..5 {
+                    for i5 in 5..10 {
                         if i5 == i4 || i5 == i3 || i5 == i2 || i5 == i1 {
                             continue;
                         }
@@ -47,14 +47,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_pipeline(memory: &Vec<i32>, phases: [i32; 5]) -> Result<i32, Box<dyn Error>> {
-    let mut prev_output = 0;
+fn run_pipeline(memory: &Vec<i32>, phases: [i32; 5]) -> Result<(i32), Box<dyn Error>> {
+    let mut cursors: Vec<Cursor<Vec<u8>>> =
+        phases.iter()
+            .map(|p| Cursor::new(format!("{}\n", p).into_bytes()))
+            .collect();
     for i in 0..5 {
-        let mut input = Cursor::new(format!("{}\n{}\n", phases[i], prev_output));
-        let mut output = Vec::new();
-        let mut computer = Computer::new(memory.clone(), &mut input, &mut output);
+        let mut computer = Computer::new(memory.clone(), &mut cursors[i], &mut cursors[(i + 1) % 5]);
         computer.run_to_completion()?;
-        prev_output = String::from_utf8(output).unwrap().trim().parse()?
     }
-    Ok(prev_output)
+
+    cursors[0].set_position(0);
+    let mut lines: Vec<String> = cursors[0].lines().map(|line| { line.unwrap() }).collect();
+    let val: i32 = lines[lines.len() - 1].trim().parse().unwrap();
+    Ok(val)
 }
