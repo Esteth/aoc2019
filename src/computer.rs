@@ -67,7 +67,7 @@ impl std::fmt::Debug for Computer {
 }
 
 impl Computer {
-    pub fn new<'a>(
+    pub fn new(
         memory: Vec<i32>,
         input: Receiver<i32>,
         output: Sender<i32>) -> Computer {
@@ -142,15 +142,12 @@ impl Computer {
                 self.ip += 4;
             }
             Instruction::Input(Parameter::Position(dest)) => {
-                println!("reading");
                 let val = self.input.recv()?;
-                println!("read {}", val);
                 self.memory[dest] = val;
                 self.ip += 2;
             }
             Instruction::Output(x) => {
                 let val = self.resolve(x);
-                println!("sending {}", val);
                 self.output.send(val)?;
                 self.ip += 2;
             }

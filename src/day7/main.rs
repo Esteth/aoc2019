@@ -60,17 +60,14 @@ fn run_pipeline(memory: &Vec<i32>, phases: [i32; 5]) -> Result<(i32), Box<dyn Er
         let rx = chans[i].1.clone();
         let tx = chans[i + 1].0.clone();
         thread::spawn(move || {
-            println!("running computer {}", i);
             let mut computer = Computer::new(memory.clone(), rx, tx);
             computer.run_to_completion().unwrap();
-            println!("computer {} finished", i);
         });
     }
-    chans[0].0.send(phases[4]);
-    println!("running final computer");
+    chans[0].0.send(0);
+    chans[4].0.send(phases[4]);
     let mut computer = Computer::new(memory.clone(), chans[4].1.clone(), chans[0].0.clone());
     computer.run_to_completion()?;
-    println!("done");
 
     let val = chans[0].1.recv()?;
     Ok(val)
