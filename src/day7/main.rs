@@ -1,5 +1,7 @@
 use std::error::Error;
-use std::io::{BufRead, Cursor};
+use std::io::BufRead;
+use crossbeam_channel::{Sender, Receiver};
+use std::thread;
 use aoc::computer::Computer;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -48,17 +50,28 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn run_pipeline(memory: &Vec<i32>, phases: [i32; 5]) -> Result<(i32), Box<dyn Error>> {
-    let mut cursors: Vec<Cursor<Vec<u8>>> =
+    let chans: Vec<(Sender<i32>, Receiver<i32>)> =
         phases.iter()
-            .map(|p| Cursor::new(format!("{}\n", p).into_bytes()))
+            .map(|p| crossbeam_channel::bounded(1))
             .collect();
-    for i in 0..5 {
-        let mut computer = Computer::new(memory.clone(), &mut cursors[i], &mut cursors[(i + 1) % 5]);
-        computer.run_to_completion()?;
+    for i in 0..4 {
+        let memory = memory.clone();
+        chans[i].0.send(phases[i]);
+        let rx = chans[i].1.clone();
+        let tx = chans[i + 1].0.clone();
+        thread::spawn(move || {
+            println!("running computer {}", i);
+            let mut computer = Computer::new(memory.clone(), rx, tx);
+            computer.run_to_completion().unwrap();
+            println!("computer {} finished", i);
+        });
     }
+    chans[0].0.send(phases[4]);
+    println!("running final computer");
+    let mut computer = Computer::new(memory.clone(), chans[4].1.clone(), chans[0].0.clone());
+    computer.run_to_completion()?;
+    println!("done");
 
-    cursors[0].set_position(0);
-    let mut lines: Vec<String> = cursors[0].lines().map(|line| { line.unwrap() }).collect();
-    let val: i32 = lines[lines.len() - 1].trim().parse().unwrap();
+    let val = chans[0].1.recv()?;
     Ok(val)
 }
