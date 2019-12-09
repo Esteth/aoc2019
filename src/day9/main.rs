@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (tx1, rx1) = crossbeam_channel::unbounded();
     let (tx2, rx2) = crossbeam_channel::unbounded();
-    tx1.send(1);
+    tx1.send(2);
     let mut computer = aoc::computer::Computer::new(memory, rx1, tx2);
     computer.run_to_completion()?;
     loop {
