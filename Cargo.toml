@@ -32,5 +32,14 @@ path = "src/day5/main.rs"
 name = "day6"
 path = "src/day6/main.rs"
 
+[[bin]]
+name = "day7"
+path = "src/day7/main.rs"
+
+[[bin]]
+name = "day8"
+path = "src/day8/main.rs"
+
 [dependencies]
 simple-error = "0.2.1"
+crossbeam-channel = "0.4"
