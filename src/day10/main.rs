@@ -4,13 +4,13 @@ use simple_error::SimpleError;
 use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 
-#[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, Debug)]
 struct Point {
     x: i32,
     y: i32,
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 struct Vector {
     x: i32,
     y: i32,
@@ -46,41 +46,73 @@ impl Ord for Vector {
 }
 
 fn best_asteroid(input: &str) -> Result<(i32, i32), Box<dyn Error>> {
-    let field: BTreeSet<Point> =
-        (0..)
-            .zip(input.lines().map(|l| l.trim()))
-            .flat_map(|(y, l)|
-                (0..)
-                    .zip(l.chars())
-                    .filter(|(_, c)| *c == '#')
-                    .map(move |(x, _)| Point { x, y }))
-            .collect();
+    let field: BTreeSet<Point> = get_field(input);
     let coords =
         field.iter()
             .max_by_key(|Point { x, y }| {
-                let mut angles: Vec<_> =
-                    field.iter()
-                        .filter(|Point { x: ox, y: oy }| *ox != *x || *oy != *y)
-                        .map(|Point { x: ox, y: oy }| Vector { x: *ox - *x, y: *oy - *y })
-                        .map(|p| p.angle())
-                        .collect();
-                angles.sort_by(|x, y| {
-                    if x < y {
-                        Ordering::Less
-                    } else if x > y{
-                        Ordering::Greater
-                    } else {
-                        Ordering::Equal
-                    }
-                });
-                angles.dedup_by(|x, y| (*x - *y).abs() < 1e-5);
-                println!("{}, {}: {:?}", x, y, angles.len());
-                angles.len()
+                get_angles(&field, (*x, *y)).len()
             });
     match coords {
         Some(coords) => Ok((coords.x, coords.y)),
         None => Err(Box::new(SimpleError::new("No asteroids found"))),
     }
+}
+
+fn get_field(input: &str) -> BTreeSet<Point>{
+    (0..)
+        .zip(input.lines().map(|l| l.trim()))
+        .flat_map(|(y, l)|
+            (0..)
+                .zip(l.chars())
+                .filter(|(_, c)| *c == '#')
+                .map(move |(x, _)| Point { x, y }))
+        .collect()
+}
+
+fn get_angles(field: &BTreeSet<Point>, (station_x, station_y): (i32, i32)) -> Vec<(Point, f64)> {
+    let mut angles: Vec<_> =
+        field.iter()
+            .filter(|Point { x: ox, y: oy }| *ox != station_x || *oy != station_y)
+            .map(|p| (p, Vector { x: p.x - station_x, y: p.y - station_y }))
+            .map(|(p, v)| (*p, v.angle()))
+            .collect();
+    angles.sort_by(|(_, x), (_, y)| {
+        if x < y {
+            Ordering::Less
+        } else if x > y{
+            Ordering::Greater
+        } else {
+            Ordering::Equal
+        }
+    });
+    angles.dedup_by(|(_, x), (_, y)| (*x - *y).abs() < 1e-5);
+    angles
+}
+
+fn ith_asteroid(i: i32, (station_x, station_y): (i32, i32), input: &str) -> (i32, i32) {
+    let field: BTreeSet<Point> = get_field(input);
+    let angles: Vec<(Point, f64)> = get_angles(&field, (station_x, station_y));
+    println!("{:?}", angles);
+
+    let mut angle_buckets: Vec<Vec<Point>> = Vec::new();
+    let mut last_angle: Option<f64> = None;
+    for (p, angle) in angles {
+        if let Some(last_angle) = last_angle {
+            if (angle - last_angle).abs() < 1e-5 {
+                let i = angle_buckets.len();
+                angle_buckets.get_mut(i).unwrap().push(p);
+            } else {
+                angle_buckets.push(vec![p]);
+            }
+        } else {
+            angle_buckets.push(vec![p]);
+        }
+        last_angle = Some(angle);
+    }
+    println!("{:?}", angle_buckets);
+    let mut destroyed: i32 = 0;
+    let mut i: usize = 0 as usize;
+    (0, 0)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -243,5 +275,40 @@ mod tests {
 ....####...##.#.#...#..#.##.")
                 .unwrap(),
             (22, 19));
+    }
+
+    #[test]
+    fn part_2() {
+        let input = "###..#.##.####.##..###.#.#..
+#..#..###..#.......####.....
+#.###.#.##..###.##..#.###.#.
+..#.##..##...#.#.###.##.####
+.#.##..####...####.###.##...
+##...###.#.##.##..###..#..#.
+.##..###...#....###.....##.#
+#..##...#..#.##..####.....#.
+.#..#.######.#..#..####....#
+#.##.##......#..#..####.##..
+##...#....#.#.##.#..#...##.#
+##.####.###...#.##........##
+......##.....#.###.##.#.#..#
+.###..#####.#..#...#...#.###
+..##.###..##.#.##.#.##......
+......##.#.#....#..##.#.####
+...##..#.#.#.....##.###...##
+.#.#..#.#....##..##.#..#.#..
+...#..###..##.####.#...#..##
+#.#......#.#..##..#...#.#..#
+..#.##.#......#.##...#..#.##
+#.##..#....#...#.##..#..#..#
+#..#.#.#.##..#..#.#.#...##..
+.#...#.........#..#....#.#.#
+..####.#..#..##.####.#.##.##
+.#.######......##..#.#.##.#.
+.#....####....###.#.#.#.####
+....####...##.#.#...#..#.##.";
+        let best_coords = best_asteroid(input).unwrap();
+        assert_eq!(best_coords, (22, 19));
+        assert_eq!(ith_asteroid(200, best_coords, input), (22, 19));
     }
 }
