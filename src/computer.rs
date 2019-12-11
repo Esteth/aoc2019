@@ -58,6 +58,7 @@ pub struct Computer {
     rb: isize,
     memory: Vec<i64>,
     input: Receiver<i64>,
+    input_request: Sender<()>,
     output: Sender<i64>,
 }
 
@@ -71,6 +72,7 @@ impl Computer {
     pub fn new(
         memory: Vec<i64>,
         input: Receiver<i64>,
+        input_request: Sender<()>,
         output: Sender<i64>) -> Computer {
         let mut large_memory = vec![0; 1_000_000_000];
         large_memory[..memory.len()].copy_from_slice(&memory);
@@ -79,6 +81,7 @@ impl Computer {
             rb: 0,
             memory: large_memory,
             input,
+            input_request,
             output,
         }
     }
@@ -134,7 +137,6 @@ impl Computer {
                 99 => Instruction::Exit,
                 _ => return Err(Box::new(ComputeError {}))
             };
-        println!("{:?}", instruction);
         match instruction {
             Instruction::Add(x, y, dest) => {
                 let x = self.resolve(x);
@@ -152,6 +154,7 @@ impl Computer {
             }
             Instruction::Input(dest) => {
                 let dest = self.resolve_save(dest) as usize;
+                self.input_request.send(())?;
                 let val = self.input.recv()?;
                 self.memory[dest] = val;
                 self.ip += 2;
@@ -196,11 +199,9 @@ impl Computer {
             Instruction::ModifyRelativeBase(x) => {
                 self.rb += self.resolve(x) as isize;
                 self.ip += 2;
-                println!("new rb: {}", self.rb);
             }
             Instruction::Exit => return Ok(true),
             _ => {
-                eprintln!("error: {:?}", self);
                 return Err(Box::new(ComputeError {}));
             }
         }
