@@ -213,10 +213,7 @@ impl Computer {
         match x {
             Parameter::Immediate(x) => x,
             Parameter::Position(x) => self.memory[x],
-            Parameter::Relative(x) => {
-                println!("resolve relative to : {} = {}", (self.rb + x), self.memory[(self.rb + x) as usize]);
-                self.memory[(self.rb + x) as usize]
-            }
+            Parameter::Relative(x) => self.memory[(self.rb + x) as usize]
         }
     }
 

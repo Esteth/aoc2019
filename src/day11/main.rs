@@ -2,6 +2,7 @@ use std::error::Error;
 use std::io::BufRead;
 use std::collections::{HashMap, HashSet};
 use std::thread;
+use crossbeam_channel::RecvError;
 
 #[derive(Copy, Clone)]
 enum Direction { Left, Right }
@@ -72,11 +73,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut positions = HashSet::new();
     let mut position = (0, 0);
     let mut facing: Facing = Facing::North;
-    input_sender.send(0);
+    input_sender.send(1);
     loop {
-        let color_to_paint = match output_receiver.recv()? {
-            0 => false,
-            _ => true,
+        let color_to_paint = match output_receiver.recv() {
+            Ok(0) => false,
+            Ok(_) => true,
+            Err(_) => break,
         };
         panels.insert(position, color_to_paint);
         positions.insert(position);
@@ -96,6 +98,25 @@ fn main() -> Result<(), Box<dyn Error>> {
             false => 0,
         });
         println!("{}", positions.len());
+    }
+    let mut white_panels: HashSet<(i32, i32)> = panels.iter()
+        .filter(|(p, color)| **color == true)
+        .map(|(p, _)| *p)
+        .collect();
+    let min_x = white_panels.iter().min_by_key(|(x, _)| *x).unwrap().0;
+    let max_x = white_panels.iter().max_by_key(|(x, _)| *x).unwrap().0;
+    let min_y = white_panels.iter().min_by_key(|(_, y)| *y).unwrap().1;
+    let max_y = white_panels.iter().max_by_key(|(_, y)| *y).unwrap().1;
+
+    for y in (min_y..=max_y).rev() {
+        for x in min_x..=max_x {
+            if white_panels.contains(&(x, y)) {
+                print!("█");
+            } else {
+                print!(" ");
+            }
+        }
+        print!("\n");
     }
     Ok(())
 }

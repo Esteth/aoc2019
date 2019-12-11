@@ -55,3 +55,4 @@ path = "src/day11/main.rs"
 [dependencies]
 simple-error = "0.2.1"
 crossbeam-channel = "0.4"
+itertools = "0.8.2"
