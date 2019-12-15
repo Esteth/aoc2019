@@ -154,8 +154,10 @@ impl Computer {
             }
             Instruction::Input(dest) => {
                 let dest = self.resolve_save(dest) as usize;
+                println!("sending input request");
                 self.input_request.send(())?;
                 let val = self.input.recv()?;
+                println!("received {}", val);
                 self.memory[dest] = val;
                 self.ip += 2;
             }
